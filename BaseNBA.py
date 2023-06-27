@@ -60,11 +60,11 @@ def visualize_player_stats(player_stats):
 
 def main():
     print("Welcome to NBA Player Stats Analyzer!")
-    while True:
-        player_name = input("Enter the name (or partial name) of the player you want to search for (or type 'stop' to exit): ")
-        if player_name.lower() == "stop":
-            break
+    num_players = int(input("Enter the number of players you want to view: "))
+    player_stats_list = []
 
+    for _ in range(num_players):
+        player_name = input("Enter the name (or partial name) of the player you want to search for: ")
         search_results = search_players(player_name)
 
         if not search_results:
@@ -82,8 +82,9 @@ def main():
             continue
 
         selected_player = search_results[player_index]
-
         player_stats = get_player_stats(selected_player["URL"])
+        player_stats_list.append({"Name": selected_player["Name"], "Stats": player_stats})
+
         print("\nPlayer Career Stats:")
         print(player_stats)
 
