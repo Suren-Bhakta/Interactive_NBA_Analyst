@@ -2,6 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 import matplotlib.pyplot as plt
+pd.set_option('display.max_columns', None)
 
 def search_players(name):
     url = f"https://www.basketball-reference.com/search/search.fcgi?search={name}"
@@ -30,8 +31,8 @@ def get_player_stats(player_url):
 
     df = pd.DataFrame(rows, columns=headers)
     df = df[df['Season'].notnull()]
-    df = df[['Season', 'PTS', 'TRB', 'AST', 'FG%']]
-    df.columns = ['Season', 'Points', 'Rebounds', 'Assists', 'Field Goal %']
+    df = df.rename(columns={'Season': 'Season', 'PTS': 'Points', 'TRB': 'Rebounds', 'AST': 'Assists', 'FG%': 'Field Goal %'})
+
     df = df.reset_index(drop=True)
 
     # Convert 'Season' column to numeric
@@ -40,80 +41,27 @@ def get_player_stats(player_url):
 
     return df
 
-def analyze_player_stats(player_stats):
-    # Example analysis: Calculate average points per game
-    player_stats["Points"] = pd.to_numeric(player_stats["Points"], errors='coerce')
-    average_pts = player_stats["Points"].mean()
-    print(f"Average Points Per Game: {average_pts}")
+def analyze_player_stats(player_stats, selected_stats):
+    for stat in selected_stats:
+        average_stat = calculate_average(player_stats, stat)
+        print(f"Career Average {stat}: {average_stat:.2f}")
 
-def visualize_player_stats(player_stats):
-    # Example visualization: Line chart for points per game over the seasons
-    player_stats["Points"] = pd.to_numeric(player_stats["Points"], errors='coerce')
-    player_stats["Season"] = pd.to_numeric(player_stats["Season"], errors='coerce')
-    plt.plot(player_stats["Season"], player_stats["Points"])
-    plt.xlabel("Season")
-    plt.ylabel("Points Per Game")
-    plt.title("Player's Points Per Game Over Seasons")
-    plt.xticks(rotation=90)  # Rotate x-axis labels for better readability
-    plt.tight_layout()  # Adjust layout to prevent label overlapping
-    plt.show()
+def visualize_player_stats(player_stats, selected_stats):
+    for stat in selected_stats:
+        player_stats[stat] = pd.to_numeric(player_stats[stat], errors='coerce')
+        player_stats["Season"] = pd.to_numeric(player_stats["Season"], errors='coerce')
+        plt.plot(player_stats["Season"], player_stats[stat])
+        plt.xlabel("Season")
+        plt.ylabel(stat)
+        plt.title(f"Player's {stat} Over Seasons")
+        plt.xticks(rotation=90)
+        plt.tight_layout()
+        plt.show()
 
-def analyze_fg_percentage(player_stats):
-    # Calculate average field goal percentage
-    player_stats["Field Goal %"] = pd.to_numeric(player_stats["Field Goal %"], errors='coerce')
-    average_fg_percentage = player_stats["Field Goal %"].mean()
-    print(f"Average Field Goal Percentage: {average_fg_percentage}%")
-
-def visualize_fg_percentage(player_stats):
-    # Line chart for field goal percentage over the seasons
-    player_stats["Field Goal %"] = pd.to_numeric(player_stats["Field Goal %"], errors='coerce')
-    player_stats["Season"] = pd.to_numeric(player_stats["Season"], errors='coerce')
-    plt.plot(player_stats["Season"], player_stats["Field Goal %"])
-    plt.xlabel("Season")
-    plt.ylabel("Field Goal Percentage")
-    plt.title("Player's Field Goal Percentage Over Seasons")
-    plt.xticks(rotation=90)
-    plt.tight_layout()
-    plt.show()
-
-def analyze_total_rebounds(player_stats):
-    # Calculate total rebounds
-    player_stats["Rebounds"] = pd.to_numeric(player_stats["Rebounds"], errors='coerce')
-    total_rebounds = player_stats["Rebounds"].mean()
-    print(f"Average Rebounds per season: {total_rebounds}")
-
-def visualize_total_rebounds(player_stats):
-    # Bar chart for total rebounds over the seasons
-    player_stats["Rebounds"] = pd.to_numeric(player_stats["Rebounds"], errors='coerce')
-    player_stats["Season"] = pd.to_numeric(player_stats["Season"], errors='coerce')
-    plt.bar(player_stats["Season"], player_stats["Rebounds"])
-    plt.xlabel("Season")
-    plt.ylabel("Average Rebounds")
-    plt.title("Player's Average Rebounds Over Seasons")
-    plt.xticks(rotation=90)
-    plt.tight_layout()
-    plt.show()
-
-def analyze_average_assists_per_season(player_stats):
-    # Calculate average assists per season
-    player_stats["Assists"] = pd.to_numeric(player_stats["Assists"], errors='coerce')
-    average_assists_per_season = player_stats["Assists"].mean()
-    print(f"Average Assists per season: {average_assists_per_season}")
-
-
-def visualize_average_assists_per_season(player_stats):
-    # Line chart for average assists per season
-    player_stats["Assists"] = pd.to_numeric(player_stats["Assists"], errors='coerce')
-    player_stats["Season"] = pd.to_numeric(player_stats["Season"], errors='coerce')
-    average_assists_per_season = player_stats.groupby("Season")["Assists"].mean()
-    plt.plot(average_assists_per_season.index, average_assists_per_season.values)
-    plt.xlabel("Season")
-    plt.ylabel("Average Assists")
-    plt.title("Player's Average Assists Per Season")
-    plt.xticks(rotation=90)
-    plt.tight_layout()
-    plt.show()
-
+def calculate_average(player_stats, column_name):
+    player_stats[column_name] = pd.to_numeric(player_stats[column_name], errors='coerce')
+    average = player_stats[column_name].mean()
+    return average
 
 def main():
     print("Welcome to NBA Player Stats Analyzer!")
@@ -141,22 +89,18 @@ def main():
         selected_player = search_results[player_index]
         player_stats = get_player_stats(selected_player["URL"])
         player_stats_list.append({"Name": selected_player["Name"], "Stats": player_stats})
-
+        selected_stats = input("Enter the stats you want to see from this list:MP, FG, FGA, Field Goal %, 3P, 3PA, 3P%, 2P, 2PA, 2P%, eFG%, FT, FTA, FT%, ORB, DRB, Rebounds, Assists, STL, BLK, TOV, PF, Points (separated by comma with no space): ").split(",")
+        selected_stats2 = ['Season', 'Age', 'Tm', 'Pos', 'G']
+        selected_stats2.extend(selected_stats)
         print("\nPlayer Career Stats:")
-        print(player_stats)
 
-        analyze_player_stats(player_stats)
-        visualize_player_stats(player_stats)
-        analyze_fg_percentage(player_stats)
-        visualize_fg_percentage(player_stats)
-        analyze_total_rebounds(player_stats)
-        visualize_total_rebounds(player_stats)
-        analyze_average_assists_per_season(player_stats)
-        visualize_average_assists_per_season(player_stats)
+
+        new_df = player_stats[selected_stats2]
+        print(new_df)
+        analyze_player_stats(player_stats, selected_stats)
+        visualize_player_stats(player_stats, selected_stats)
 
     print("Thank you for using NBA Player Stats Analyzer!")
 
 if __name__ == "__main__":
     main()
-
-
