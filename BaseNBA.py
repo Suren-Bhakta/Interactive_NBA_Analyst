@@ -76,6 +76,44 @@ def visualize_fg_percentage(player_stats):
     plt.tight_layout()
     plt.show()
 
+def analyze_total_rebounds(player_stats):
+    # Calculate total rebounds
+    player_stats["Rebounds"] = pd.to_numeric(player_stats["Rebounds"], errors='coerce')
+    total_rebounds = player_stats["Rebounds"].mean()
+    print(f"Average Rebounds per season: {total_rebounds}")
+
+def visualize_total_rebounds(player_stats):
+    # Bar chart for total rebounds over the seasons
+    player_stats["Rebounds"] = pd.to_numeric(player_stats["Rebounds"], errors='coerce')
+    player_stats["Season"] = pd.to_numeric(player_stats["Season"], errors='coerce')
+    plt.bar(player_stats["Season"], player_stats["Rebounds"])
+    plt.xlabel("Season")
+    plt.ylabel("Average Rebounds")
+    plt.title("Player's Average Rebounds Over Seasons")
+    plt.xticks(rotation=90)
+    plt.tight_layout()
+    plt.show()
+
+def analyze_average_assists_per_season(player_stats):
+    # Calculate average assists per season
+    player_stats["Assists"] = pd.to_numeric(player_stats["Assists"], errors='coerce')
+    average_assists_per_season = player_stats["Assists"].mean()
+    print(f"Average Assists per season: {average_assists_per_season}")
+
+
+def visualize_average_assists_per_season(player_stats):
+    # Line chart for average assists per season
+    player_stats["Assists"] = pd.to_numeric(player_stats["Assists"], errors='coerce')
+    player_stats["Season"] = pd.to_numeric(player_stats["Season"], errors='coerce')
+    average_assists_per_season = player_stats.groupby("Season")["Assists"].mean()
+    plt.plot(average_assists_per_season.index, average_assists_per_season.values)
+    plt.xlabel("Season")
+    plt.ylabel("Average Assists")
+    plt.title("Player's Average Assists Per Season")
+    plt.xticks(rotation=90)
+    plt.tight_layout()
+    plt.show()
+
 
 def main():
     print("Welcome to NBA Player Stats Analyzer!")
@@ -111,8 +149,14 @@ def main():
         visualize_player_stats(player_stats)
         analyze_fg_percentage(player_stats)
         visualize_fg_percentage(player_stats)
+        analyze_total_rebounds(player_stats)
+        visualize_total_rebounds(player_stats)
+        analyze_average_assists_per_season(player_stats)
+        visualize_average_assists_per_season(player_stats)
 
     print("Thank you for using NBA Player Stats Analyzer!")
 
 if __name__ == "__main__":
     main()
+
+
