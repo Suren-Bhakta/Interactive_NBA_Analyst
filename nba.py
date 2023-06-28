@@ -45,10 +45,10 @@ def analyze_player_stats(player_stats):
     stats = ["G", "GS", "MP", "FG", "FGA", "Field Goal %", "3P", "3PA", "3P%", "2P", "2PA", "2P%", "eFG%", "FT", "FTA", "FT%", "ORB", "DRB", "Rebounds", "Assists", "STL", "BLK", "TOV", "PF", "Points"]
     for stat in stats:
         average_stat = calculate_average(player_stats, stat)
-        print(f"Career Average {stat}: {average_stat}")
+        print(f"Career Average {stat}: {average_stat:.2f}")
 
 def visualize_player_stats(player_stats):
-    stats = ["Points", "Rebounds", "Assists", "Field Goal %"]
+    stats = ["G", "GS", "MP", "FG", "FGA", "Field Goal %", "3P", "3PA", "3P%", "2P", "2PA", "2P%", "eFG%", "FT", "FTA", "FT%", "ORB", "DRB", "Rebounds", "Assists", "STL", "BLK", "TOV", "PF", "Points"]
     for stat in stats:
         player_stats[stat] = pd.to_numeric(player_stats[stat], errors='coerce')
         player_stats["Season"] = pd.to_numeric(player_stats["Season"], errors='coerce')
