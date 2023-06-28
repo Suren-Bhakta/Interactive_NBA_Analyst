@@ -2,9 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 import matplotlib.pyplot as plt
-
 pd.set_option('display.max_columns', None)
-
 
 def search_players(name):
     url = f"https://www.basketball-reference.com/search/search.fcgi?search={name}"
@@ -20,22 +18,6 @@ def search_players(name):
 
     return results
 
-
-def select_player(player_names):
-    print("Select a player:")
-    for i, player in enumerate(player_names):
-        print(f"{i+1}. {player['Name']}")
-
-    selection = input("> ")
-    try:
-        player_index = int(selection) - 1
-        selected_player = player_names[player_index]
-        return selected_player
-    except (ValueError, IndexError):
-        print("Invalid input. Please try again.")
-        return None
-
-
 def get_player_stats(player_url):
     response = requests.get(player_url)
     soup = BeautifulSoup(response.content, 'html.parser')
@@ -49,55 +31,15 @@ def get_player_stats(player_url):
 
     df = pd.DataFrame(rows, columns=headers)
     df = df[df['Season'].notnull()]
+    df = df.rename(columns={'Season': 'Season', 'PTS': 'Points', 'TRB': 'Rebounds', 'AST': 'Assists', 'FG%': 'Field Goal %'})
 
-    # Update column names for comparison and calculation
-    df = df.rename(columns={'PTS': 'Points', 'TRB': 'Rebounds', 'AST': 'Assists', 'FG%': 'Field Goal %'})
+    df = df.reset_index(drop=True)
 
     # Convert 'Season' column to numeric
     df['Season'] = df['Season'].apply(lambda x: x.split("-")[0])
     df['Season'] = pd.to_numeric(df['Season'], errors='coerce')
 
-    # Calculate Player Efficiency Rating (PER)
-    df['PER'] = ((df['Points'].astype(float) + df['Rebounds'].astype(float) + df['Assists'].astype(float)) / df['Season']) * 100
-
     return df
-
-
-def compare_players(player_stats):
-    pd.set_option('display.max_columns', None)  # Display all columns in the DataFrame
-
-    print("Enter the numbers corresponding to the players you want to compare (separated by commas):")
-    for i, stats in enumerate(player_stats):
-        print(f"{i+1}. {stats.columns[0]}")
-
-    player_nums = input("> ").split(",")
-
-    players_to_compare = []
-    for num in player_nums:
-        try:
-            player_index = int(num.strip()) - 1
-            players_to_compare.append(player_stats[player_index])
-        except (IndexError, ValueError):
-            print("Invalid input. Skipping player.")
-
-    if len(players_to_compare) < 2:
-        print("Please select at least two players for comparison.")
-        return
-
-    # Combine player stats into a single DataFrame
-    combined_stats = pd.concat(players_to_compare, keys=[stats.columns[0] for stats in players_to_compare])
-
-    # Display player stats comparison
-    print("\nPlayer Stats Comparison:")
-    for column in combined_stats.columns:
-        print(f"{column:<12}", end="")
-        for player in players_to_compare:
-            print(f"{player[column][0]:<12}", end="")
-        print()
-
-    print()
-
-
 
 def analyze_player_stats(player_stats):
     # Example analysis: Calculate average points per game
@@ -105,22 +47,11 @@ def analyze_player_stats(player_stats):
     average_pts = player_stats["Points"].mean()
     print(f"Average Points Per Game: {average_pts}")
 
-
-from tabulate import tabulate
-
-def visualize_player_stats(stats):
-    # Format player stats as a table
-    table = []
-    for column, value in stats.items():
-        table.append([column, value])
-
-    # Print player stats table
-    print("Player Stats:")
-    print(tabulate(table, headers=["Stat", "Value"], tablefmt="fancy_grid"))
+def visualize_player_stats(player_stats):
     # Example visualization: Line chart for points per game over the seasons
-    stats["Points"] = pd.to_numeric(stats["Points"], errors='coerce')
-    stats["Season"] = pd.to_numeric(stats["Season"], errors='coerce')
-    plt.plot(stats["Season"], stats["Points"])
+    player_stats["Points"] = pd.to_numeric(player_stats["Points"], errors='coerce')
+    player_stats["Season"] = pd.to_numeric(player_stats["Season"], errors='coerce')
+    plt.plot(player_stats["Season"], player_stats["Points"])
     plt.xlabel("Season")
     plt.ylabel("Points Per Game")
     plt.title("Player's Points Per Game Over Seasons")
@@ -128,40 +59,107 @@ def visualize_player_stats(stats):
     plt.tight_layout()  # Adjust layout to prevent label overlapping
     plt.show()
 
+def analyze_fg_percentage(player_stats):
+    # Calculate average field goal percentage
+    player_stats["Field Goal %"] = pd.to_numeric(player_stats["Field Goal %"], errors='coerce')
+    average_fg_percentage = player_stats["Field Goal %"].mean()
+    print(f"Average Field Goal Percentage: {average_fg_percentage}%")
+
+def visualize_fg_percentage(player_stats):
+    # Line chart for field goal percentage over the seasons
+    player_stats["Field Goal %"] = pd.to_numeric(player_stats["Field Goal %"], errors='coerce')
+    player_stats["Season"] = pd.to_numeric(player_stats["Season"], errors='coerce')
+    plt.plot(player_stats["Season"], player_stats["Field Goal %"])
+    plt.xlabel("Season")
+    plt.ylabel("Field Goal Percentage")
+    plt.title("Player's Field Goal Percentage Over Seasons")
+    plt.xticks(rotation=90)
+    plt.tight_layout()
+    plt.show()
+
+def analyze_total_rebounds(player_stats):
+    # Calculate total rebounds
+    player_stats["Rebounds"] = pd.to_numeric(player_stats["Rebounds"], errors='coerce')
+    total_rebounds = player_stats["Rebounds"].mean()
+    print(f"Average Rebounds per season: {total_rebounds}")
+
+def visualize_total_rebounds(player_stats):
+    # Bar chart for total rebounds over the seasons
+    player_stats["Rebounds"] = pd.to_numeric(player_stats["Rebounds"], errors='coerce')
+    player_stats["Season"] = pd.to_numeric(player_stats["Season"], errors='coerce')
+    plt.bar(player_stats["Season"], player_stats["Rebounds"])
+    plt.xlabel("Season")
+    plt.ylabel("Average Rebounds")
+    plt.title("Player's Average Rebounds Over Seasons")
+    plt.xticks(rotation=90)
+    plt.tight_layout()
+    plt.show()
+
+def analyze_average_assists_per_season(player_stats):
+    # Calculate average assists per season
+    player_stats["Assists"] = pd.to_numeric(player_stats["Assists"], errors='coerce')
+    average_assists_per_season = player_stats["Assists"].mean()
+    print(f"Average Assists per season: {average_assists_per_season}")
 
 
-def export_player_stats(player_stats, filename):
-    player_stats.to_csv(filename, index=False)
-    print(f"Player stats exported to {filename} successfully.")
+def visualize_average_assists_per_season(player_stats):
+    # Line chart for average assists per season
+    player_stats["Assists"] = pd.to_numeric(player_stats["Assists"], errors='coerce')
+    player_stats["Season"] = pd.to_numeric(player_stats["Season"], errors='coerce')
+    average_assists_per_season = player_stats.groupby("Season")["Assists"].mean()
+    plt.plot(average_assists_per_season.index, average_assists_per_season.values)
+    plt.xlabel("Season")
+    plt.ylabel("Average Assists")
+    plt.title("Player's Average Assists Per Season")
+    plt.xticks(rotation=90)
+    plt.tight_layout()
+    plt.show()
+
+
 
 
 def main():
-    print("NBA Player Comparison Tool")
-    print("Enter the number of players you want to compare:")
-    num_players = int(input("> "))
-    player_stats = []
+    print("Welcome to NBA Player Stats Analyzer!")
+    num_players = int(input("Enter the number of players you want to view: "))
+    player_stats_list = []
 
-    for i in range(num_players):
-        print(f"Enter the name of player {i+1}:")
-        player_name = input("> ")
-        player_names = search_players(player_name)
+    for _ in range(num_players):
+        player_name = input("Enter the name (or partial name) of the player you want to search for: ")
+        search_results = search_players(player_name)
 
-        if len(player_names) > 0:
-            selected_player = select_player(player_names)
-            if selected_player:
-                player_stats.append(get_player_stats(selected_player["URL"]))
-        else:
-            print(f"No player found with the name {player_name}.")
+        if not search_results:
+            print("No players found.")
+            continue
 
-    if len(player_stats) == 1:
-        analyze_player_stats(player_stats[0])
-        visualize_player_stats(player_stats[0])
-    elif len(player_stats) > 1:
-        compare_players(player_stats)
+        print("Search Results:")
+        for i, result in enumerate(search_results):
+            print(f"{i+1}. {result['Name']}")
+
+        player_index = int(input("Enter the index of the player you want to analyze: ")) - 1
+
+        if player_index < 0 or player_index >= len(search_results):
+            print("Invalid player index.")
+            continue
+
+        selected_player = search_results[player_index]
+        player_stats = get_player_stats(selected_player["URL"])
+        player_stats_list.append({"Name": selected_player["Name"], "Stats": player_stats})
+
+        print("\nPlayer Career Stats:")
+        print(player_stats)
+
+        analyze_player_stats(player_stats)
         visualize_player_stats(player_stats)
-    else:
-        print("Please select at least one player for comparison.")
+        analyze_fg_percentage(player_stats)
+        visualize_fg_percentage(player_stats)
+        analyze_total_rebounds(player_stats)
+        visualize_total_rebounds(player_stats)
+        analyze_average_assists_per_season(player_stats)
+        visualize_average_assists_per_season(player_stats)
 
+    print("Thank you for using NBA Player Stats Analyzer!")
 
 if __name__ == "__main__":
     main()
+
+
