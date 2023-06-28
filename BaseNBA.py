@@ -58,6 +58,25 @@ def visualize_player_stats(player_stats):
     plt.tight_layout()  # Adjust layout to prevent label overlapping
     plt.show()
 
+def analyze_fg_percentage(player_stats):
+    # Calculate average field goal percentage
+    player_stats["Field Goal %"] = pd.to_numeric(player_stats["Field Goal %"], errors='coerce')
+    average_fg_percentage = player_stats["Field Goal %"].mean()
+    print(f"Average Field Goal Percentage: {average_fg_percentage}%")
+
+def visualize_fg_percentage(player_stats):
+    # Line chart for field goal percentage over the seasons
+    player_stats["Field Goal %"] = pd.to_numeric(player_stats["Field Goal %"], errors='coerce')
+    player_stats["Season"] = pd.to_numeric(player_stats["Season"], errors='coerce')
+    plt.plot(player_stats["Season"], player_stats["Field Goal %"])
+    plt.xlabel("Season")
+    plt.ylabel("Field Goal Percentage")
+    plt.title("Player's Field Goal Percentage Over Seasons")
+    plt.xticks(rotation=90)
+    plt.tight_layout()
+    plt.show()
+
+
 def main():
     print("Welcome to NBA Player Stats Analyzer!")
     num_players = int(input("Enter the number of players you want to view: "))
@@ -90,6 +109,8 @@ def main():
 
         analyze_player_stats(player_stats)
         visualize_player_stats(player_stats)
+        analyze_fg_percentage(player_stats)
+        visualize_fg_percentage(player_stats)
 
     print("Thank you for using NBA Player Stats Analyzer!")
 
