@@ -2,6 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 import matplotlib.pyplot as plt
+
 pd.set_option('display.max_columns', None)
 
 def search_players(name):
@@ -41,15 +42,13 @@ def get_player_stats(player_url):
 
     return df
 
-def analyze_player_stats(player_stats):
-    stats = ["G", "GS", "MP", "FG", "FGA", "Field Goal %", "3P", "3PA", "3P%", "2P", "2PA", "2P%", "eFG%", "FT", "FTA", "FT%", "ORB", "DRB", "Rebounds", "Assists", "STL", "BLK", "TOV", "PF", "Points"]
-    for stat in stats:
+def analyze_player_stats(player_stats, selected_stats):
+    for stat in selected_stats:
         average_stat = calculate_average(player_stats, stat)
         print(f"Career Average {stat}: {average_stat:.2f}")
 
-def visualize_player_stats(player_stats):
-    stats = ["G", "GS", "MP", "FG", "FGA", "Field Goal %", "3P", "3PA", "3P%", "2P", "2PA", "2P%", "eFG%", "FT", "FTA", "FT%", "ORB", "DRB", "Rebounds", "Assists", "STL", "BLK", "TOV", "PF", "Points"]
-    for stat in stats:
+def visualize_player_stats(player_stats, selected_stats):
+    for stat in selected_stats:
         player_stats[stat] = pd.to_numeric(player_stats[stat], errors='coerce')
         player_stats["Season"] = pd.to_numeric(player_stats["Season"], errors='coerce')
         plt.plot(player_stats["Season"], player_stats[stat])
@@ -60,12 +59,43 @@ def visualize_player_stats(player_stats):
         plt.tight_layout()
         plt.show()
 
+def compare_player_stats(player_stats_list, selected_stats):
+    seasons = player_stats_list[0]["Stats"]["Season"]
+    plt.figure(figsize=(10, 6))
+
+    for player_stats in player_stats_list:
+        player_name = player_stats["Name"]
+        stats = player_stats["Stats"]
+
+        for stat in selected_stats:
+            stats[stat] = pd.to_numeric(stats[stat], errors='coerce')
+
+            # Create a DataFrame with all seasons and NaN values
+            missing_seasons = list(set(seasons) - set(stats["Season"]))
+            missing_data = pd.DataFrame(index=missing_seasons, columns=stats.columns)
+            missing_data["Season"] = missing_data.index
+            stats = pd.concat([stats, missing_data])
+
+            # Sort the stats based on season
+            stats = stats.sort_values("Season")
+
+            plt.plot(stats["Season"], stats[stat], label=f"{player_name} - {stat}")
+
+    plt.xlabel("Season")
+    plt.ylabel("Stat Value")
+    plt.title("Player Comparison")
+    plt.legend()
+    plt.xticks(rotation=90)
+    plt.tight_layout()
+    plt.show()
+
+
+
 
 def calculate_average(player_stats, column_name):
     player_stats[column_name] = pd.to_numeric(player_stats[column_name], errors='coerce')
     average = player_stats[column_name].mean()
     return average
-
 
 def main():
     print("Welcome to NBA Player Stats Analyzer!")
@@ -93,17 +123,51 @@ def main():
         selected_player = search_results[player_index]
         player_stats = get_player_stats(selected_player["URL"])
         player_stats_list.append({"Name": selected_player["Name"], "Stats": player_stats})
-
+        selected_stats = input("Enter the stats you want to see from this list: MP, FG, FGA, Field Goal %, 3P, 3PA, 3P%, 2P, 2PA, 2P%, eFG%, FT, FTA, FT%, ORB, DRB, Rebounds, Assists, STL, BLK, TOV, PF, Points (separated by commas with no space): ").split(",")
+        selected_stats2 = ['Season', 'Age', 'Tm', 'Pos', 'G']
+        selected_stats2.extend(selected_stats)
         print("\nPlayer Career Stats:")
-        print(player_stats)
 
-        analyze_player_stats(player_stats)
-        visualize_player_stats(player_stats)
+        new_df = player_stats[selected_stats2]
+        print(new_df)
+        analyze_player_stats(player_stats, selected_stats)
 
+        show_graph = input("Do you want to see the graph for this player? (y/n): ")
+        if show_graph.lower() == "y":
+            visualize_player_stats(player_stats, selected_stats)
+
+    if len(player_stats_list) > 1:
+        compare_players = input("Do you want to compare player statistics? (y/n): ")
+        if compare_players.lower() == "y":
+            while True:
+                print("Player Comparison:")
+                for i, player in enumerate(player_stats_list):
+                    print(f"{i+1}. {player['Name']}")
+                player_indices = input("Enter the indices of the players you want to compare (separated by commas): ").split(",")
+                player_indices = [int(idx.strip()) - 1 for idx in player_indices if idx.strip().isdigit()]
+
+                if len(player_indices) < 2 or any(idx < 0 or idx >= len(player_stats_list) for idx in player_indices):
+                    print("Invalid player indices. Please try again.")
+                    continue
+
+                selected_players = [player_stats_list[idx] for idx in player_indices]
+                selected_stats = input("Enter the stats you want to compare (separated by commas with no space): ").split(",")
+
+                print("Player Comparison Results:")
+                for stat in selected_stats:
+                    print(f"\n{stat} Comparison:")
+                    for player in selected_players:
+                        average_stat = calculate_average(player['Stats'], stat)
+                        print(f"{player['Name']}: {average_stat:.2f}")
+
+                compare_player_stats(selected_players, selected_stats)
+
+                break
 
     print("Thank you for using NBA Player Stats Analyzer!")
 
 if __name__ == "__main__":
     main()
+
 
 
