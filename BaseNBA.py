@@ -89,18 +89,45 @@ def main():
         selected_player = search_results[player_index]
         player_stats = get_player_stats(selected_player["URL"])
         player_stats_list.append({"Name": selected_player["Name"], "Stats": player_stats})
-        selected_stats = input("Enter the stats you want to see from this list:MP, FG, FGA, Field Goal %, 3P, 3PA, 3P%, 2P, 2PA, 2P%, eFG%, FT, FTA, FT%, ORB, DRB, Rebounds, Assists, STL, BLK, TOV, PF, Points (separated by comma with no space): ").split(",")
+        selected_stats = input("Enter the stats you want to see from this list: MP, FG, FGA, Field Goal %, 3P, 3PA, 3P%, 2P, 2PA, 2P%, eFG%, FT, FTA, FT%, ORB, DRB, Rebounds, Assists, STL, BLK, TOV, PF, Points (separated by commas with no space): ").split(",")
         selected_stats2 = ['Season', 'Age', 'Tm', 'Pos', 'G']
         selected_stats2.extend(selected_stats)
         print("\nPlayer Career Stats:")
-
 
         new_df = player_stats[selected_stats2]
         print(new_df)
         analyze_player_stats(player_stats, selected_stats)
         visualize_player_stats(player_stats, selected_stats)
 
+    if len(player_stats_list) > 1:
+        compare_players = input("Do you want to compare player statistics? (y/n): ")
+        if compare_players.lower() == "y":
+            while True:
+                print("Player Comparison:")
+                for i, player in enumerate(player_stats_list):
+                    print(f"{i+1}. {player['Name']}")
+                player_indices = input("Enter the indices of the players you want to compare (separated by commas): ").split(",")
+                player_indices = [int(idx.strip()) - 1 for idx in player_indices if idx.strip().isdigit()]
+
+                if len(player_indices) < 2 or any(idx < 0 or idx >= len(player_stats_list) for idx in player_indices):
+                    print("Invalid player indices. Please try again.")
+                    continue
+
+                selected_players = [player_stats_list[idx] for idx in player_indices]
+                selected_stats = input("Enter the stats you want to compare (separated by commas with no space): ").split(",")
+
+                print("Player Comparison Results:")
+                for stat in selected_stats:
+                    print(f"\n{stat} Comparison:")
+                    for player in selected_players:
+                        #print(player_stats[selected_stats])
+                        average_stat = calculate_average(player['Stats'], stat)
+                        print(f"{player['Name']}: {average_stat:.2f}")
+
+                break
+
     print("Thank you for using NBA Player Stats Analyzer!")
+
 
 if __name__ == "__main__":
     main()
