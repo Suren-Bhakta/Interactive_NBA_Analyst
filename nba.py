@@ -45,19 +45,37 @@ def get_player_stats(player_url):
 def analyze_player_stats(player_stats, selected_stats):
     for stat in selected_stats:
         average_stat = calculate_average(player_stats, stat)
-        print(f"Career Average {stat}: {average_stat:.2f}")
+        career_average = calculate_average(player_stats, stat)
+        print(f"Career Average {stat}: {career_average:.2f}")
+
+        last_season_stat = player_stats[stat].iloc[-1]
+        if pd.notnull(last_season_stat):
+            print(f"Last Season {stat}: {last_season_stat:.2f}")
+        else:
+            print("Last Season Stat: Not available")
+
+        print("\n")
+
 
 def visualize_player_stats(player_stats, selected_stats):
     for stat in selected_stats:
         player_stats[stat] = pd.to_numeric(player_stats[stat], errors='coerce')
         player_stats["Season"] = pd.to_numeric(player_stats["Season"], errors='coerce')
-        plt.plot(player_stats["Season"], player_stats[stat])
-        plt.xlabel("Season")
-        plt.ylabel(stat)
-        plt.title(f"Player's {stat} Over Seasons")
-        plt.xticks(rotation=90)
-        plt.tight_layout()
-        plt.show()
+        plt.plot(player_stats["Season"], player_stats[stat], label=stat)
+
+        # Calculate career average
+        career_average = calculate_average(player_stats, stat)
+        career_average_line = [career_average] * len(player_stats["Season"])
+        plt.plot(player_stats["Season"], career_average_line, label=f"Career Avg - {stat}", linestyle='--')
+
+    plt.xlabel("Season")
+    plt.ylabel("Stat Value")
+    plt.title("Player's Stats Over Seasons")
+    plt.legend()
+    plt.xticks(rotation=90)
+    plt.tight_layout()
+    plt.show()
+
 
 def compare_player_stats(player_stats_list, selected_stats):
     seasons = player_stats_list[0]["Stats"]["Season"]
@@ -158,7 +176,16 @@ def main():
                     print(f"\n{stat} Comparison:")
                     for player in selected_players:
                         average_stat = calculate_average(player['Stats'], stat)
-                        print(f"{player['Name']}: {average_stat:.2f}")
+                        career_average = calculate_average(player['Stats'], stat)
+                        print(f"{player['Name']}: {average_stat:.2f} (Career Average: {career_average:.2f})")
+
+                        last_season_stat = player['Stats'][stat].iloc[-1]
+                        if pd.notnull(last_season_stat):
+                            print(f"Last Season {stat}: {last_season_stat:.2f}")
+                        else:
+                            print("Last Season Stat: Not available")
+
+                        print("\n")
 
                 compare_player_stats(selected_players, selected_stats)
 
@@ -168,6 +195,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
