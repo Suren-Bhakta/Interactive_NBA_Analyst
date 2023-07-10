@@ -59,22 +59,26 @@ def analyze_player_stats(player_stats, selected_stats):
 
 def visualize_player_stats(player_stats, selected_stats):
     for stat in selected_stats:
+        fig, ax = plt.subplots()  # Create a new figure and axes for each stat
+
         player_stats[stat] = pd.to_numeric(player_stats[stat], errors='coerce')
         player_stats["Season"] = pd.to_numeric(player_stats["Season"], errors='coerce')
-        plt.plot(player_stats["Season"], player_stats[stat], label=stat)
+        ax.plot(player_stats["Season"], player_stats[stat], label=stat)
 
         # Calculate career average
         career_average = calculate_average(player_stats, stat)
         career_average_line = [career_average] * len(player_stats["Season"])
-        plt.plot(player_stats["Season"], career_average_line, label=f"Career Avg - {stat}", linestyle='--')
+        ax.plot(player_stats["Season"], career_average_line, label=f"Career Avg - {stat}", linestyle='--')
 
-    plt.xlabel("Season")
-    plt.ylabel("Stat Value")
-    plt.title("Player's Stats Over Seasons")
-    plt.legend()
-    plt.xticks(rotation=90)
-    plt.tight_layout()
-    plt.show()
+        ax.set_xlabel("Season")
+        ax.set_ylabel("Stat Value")
+        ax.set_title(f"Player's {stat} Over Seasons")
+        ax.legend()
+        ax.set_xticklabels(ax.get_xticks(), rotation=90)  # Set the rotation of tick labels
+        plt.tight_layout()
+        plt.show()
+
+
 
 
 def compare_player_stats(player_stats_list, selected_stats):
@@ -195,7 +199,6 @@ def main():
 
 if __name__ == "__main__":
     main()
-
 
 
 
