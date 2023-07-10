@@ -173,32 +173,38 @@ def main():
                     continue
 
                 selected_players = [player_stats_list[idx] for idx in player_indices]
-                selected_stats = input("Enter the stats you want to compare (separated by commas with no space): ").split(",")
 
-                print("Player Comparison Results:")
-                for stat in selected_stats:
-                    print(f"\n{stat} Comparison:")
+                while True:
+                    selected_stat = input("Enter the stat you want to compare (or 'q' to exit): ")
+                    if selected_stat.lower() == "q":
+                        break
+
+                    print("Player Comparison Results:")
+                    print(f"\n{selected_stat} Comparison:")
                     for player in selected_players:
-                        average_stat = calculate_average(player['Stats'], stat)
-                        career_average = calculate_average(player['Stats'], stat)
+                        average_stat = calculate_average(player['Stats'], selected_stat)
+                        career_average = calculate_average(player['Stats'], selected_stat)
                         print(f"{player['Name']}: {average_stat:.2f} (Career Average: {career_average:.2f})")
 
-                        last_season_stat = player['Stats'][stat].iloc[-1]
+                        last_season_stat = player['Stats'][selected_stat].iloc[-1]
                         if pd.notnull(last_season_stat):
-                            print(f"Last Season {stat}: {last_season_stat:.2f}")
+                            print(f"Last Season {selected_stat}: {last_season_stat:.2f}")
                         else:
                             print("Last Season Stat: Not available")
 
                         print("\n")
 
-                compare_player_stats(selected_players, selected_stats)
+                    compare_player_stats(selected_players, [selected_stat])
 
-                break
+                continue_comparison = input("Do you want to continue comparing stats? (y/n): ")
+                if continue_comparison.lower() != "y":
+                    break
+
+
 
     print("Thank you for using NBA Player Stats Analyzer!")
 
 if __name__ == "__main__":
     main()
-
 
 
